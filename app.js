@@ -1,6 +1,9 @@
 const fs = require("fs-extra");
 const sitesFolder = "sites";
-var yaml = require("js-yaml");
+const yaml = require("js-yaml");
+const axios = require("axios");
+
+const uploadToDatabase = true;
 
 // turn file structure into json object
 const allSitesBySubvertical = fs
@@ -31,17 +34,32 @@ const convertSiteConfigAndQuestionsToJson = (sitePath) => {
   filesToConvert.forEach((item) => {
     fileName = item.replace(/^.*[\\\/]/, "");
 
-    fs.outputFileSync(
-      `converted/${sitePath}/${fileName}`,
-      JSON.stringify(
-        {
-          ...yaml.load(fs.readFileSync(item, "utf-8")),
-          uploadDetails: { type: fileName },
+    json = {
+      ...yaml.load(fs.readFileSync(item, "utf-8")),
+      uploadDetails: {
+        type: fileName,
+        site: sitePath.replace(/^.*[\\\/]/, ""),
+      },
+    };
+    jsonString = JSON.stringify(json, null, 4);
+
+    fs.outputFileSync(`converted/${sitePath}/${fileName}`, jsonString);
+
+    if (uploadToDatabase) {
+      axios({
+        method: "post",
+        url: "http://localhost:3000/api/survey-utility",
+        data: {
+          ...json,
         },
-        null,
-        4
-      )
-    );
+      })
+        .then(() => {
+          console.log(`${sitePath} uploaded`);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
   });
 };
 
