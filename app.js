@@ -3,52 +3,53 @@ const sitesFolder = "sites";
 var yaml = require("js-yaml");
 
 // turn file structure into json object
-const allSitesBySubvertical = fs.readdirSync(sitesFolder).map((subVertical) => {
-  return {
-    name: subVertical,
-    sites: fs.readdirSync(`${sitesFolder}/${subVertical}`),
-  };
-});
+const allSitesBySubvertical = fs
+  .readdirSync(sitesFolder, { withFileTypes: true })
+  .filter((dirent) => dirent.isDirectory())
+  .map((subVertical) => {
+    return {
+      name: subVertical.name,
+      sites: fs.readdirSync(`${sitesFolder}/${subVertical.name}`),
+    };
+  });
 
+// take a given site directory, inspect /data/, convert yaml files to json, and place them in /converted/
 const convertSiteConfigAndQuestionsToJson = (sitePath) => {
-  fs.outputFileSync(
-    `converted/${sitePath}/config.yaml`,
-    JSON.stringify(
-      yaml.load(fs.readFileSync(`${sitePath}/data/config.yaml`, "utf-8")),
-      null,
-      4
-    )
-  );
+  const filesToConvert = [];
 
-  fs.outputFileSync(
-    `converted/${sitePath}/questions.yaml`,
-    JSON.stringify(
-      yaml.load(fs.readFileSync(`${sitePath}/data/questions.yaml`, "utf-8")),
-      null,
-      4
-    )
-  );
+  fs.readdirSync(`${sitePath}/data`).forEach((item) => {
+    if (
+      item == "questions.yaml" ||
+      item == "config.yaml" ||
+      item.startsWith("alternate-config") ||
+      item.startsWith("alternate-questions")
+    ) {
+      filesToConvert.push(`${sitePath}/data/${item}`);
+    }
+  });
+
+  filesToConvert.forEach((item) => {
+    fileName = item.replace(/^.*[\\\/]/, "");
+
+    fs.outputFileSync(
+      `converted/${sitePath}/${fileName}`,
+      JSON.stringify(
+        {
+          ...yaml.load(fs.readFileSync(item, "utf-8")),
+          uploadDetails: { type: fileName },
+        },
+        null,
+        4
+      )
+    );
+  });
 };
 
+// run conversion for each subvertical/site
 allSitesBySubvertical.forEach((subVertical) => {
   subVertical.sites.forEach((site) => {
-    convertSiteConfigAndQuestionsToJson(`${sitesFolder}/${subVertical.name}/${site}`);
+    convertSiteConfigAndQuestionsToJson(
+      `${sitesFolder}/${subVertical.name}/${site}`
+    );
   });
 });
-
-// {
-//     name: 'homeservices',
-//     sites: [
-//       'homealarmsurvey.com',
-//       'homehvacsurvey.com',
-//       'homeroofingsurvey',
-//       'homewindowsurvey.com',
-//       'qualifiedsolarsurvey',
-//       'solarsurveyusa',
-//       'thesolarsurvey',
-//       'usaroofingsurvey.com',
-//       'usasolarsurvey',
-//       'usawindowsurvey.com',
-//       'yourbesthomealarm.com'
-//     ]
-//   },
