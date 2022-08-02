@@ -3,7 +3,7 @@ const sitesFolder = "sites";
 const yaml = require("js-yaml");
 const axios = require("axios");
 
-const uploadToDatabase = true;
+const uploadToDatabase = false;
 
 // turn file structure into json object
 const allSitesBySubvertical = fs

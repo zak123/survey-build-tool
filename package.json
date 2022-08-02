@@ -1,0 +1,16 @@
+{
+  "name": "surveyconfigutility",
+  "version": "1.0.0",
+  "description": "pull survey config yaml's into json and uploads them to the jtk db",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "fs-extra": "^10.1.0",
+    "js-yaml": "^4.1.0"
+  }
+}
